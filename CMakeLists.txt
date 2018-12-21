@@ -647,11 +647,11 @@ if (UNIX OR APPLE)
       # Build Process
       set(CAFFE_CPU_ONLY OFF)
       if (${GPU_MODE} MATCHES "CUDA")
-        execute_process(COMMAND git checkout master WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/3rdparty/caffe)
+        execute_process(COMMAND git checkout f019d0dfe86f49d1140961f8c7dec22130c83154 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/3rdparty/caffe)
       elseif (${GPU_MODE} MATCHES "CPU_ONLY")
         if (USE_MKL)
           #execute_process(COMMAND git checkout intel WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/3rdparty/caffe)
-          execute_process(COMMAND git checkout b6712ce WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/3rdparty/caffe)
+          execute_process(COMMAND git checkout f019d0dfe86f49d1140961f8c7dec22130c83154 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/3rdparty/caffe)
           execute_process(COMMAND sh prepare_mkl.sh WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/3rdparty/caffe/external/mkl
               OUTPUT_VARIABLE rv)
           set( MLIST ${rv} )
@@ -711,7 +711,7 @@ if (UNIX OR APPLE)
           -DUSE_MKL2017_AS_DEFAULT_ENGINE=${CAFFE_CPU_ONLY}
           -DCMAKE_BUILD_TYPE=Release
           -DBUILD_docs=OFF
-          -DBUILD_python=OFF
+          -DBUILD_python=ON
           -DBUILD_python_layer=OFF
           -DUSE_LEVELDB=OFF
           -DUSE_LMDB=OFF
@@ -727,7 +727,7 @@ if (UNIX OR APPLE)
           -DCPU_ONLY=${CAFFE_CPU_ONLY}
           -DCMAKE_BUILD_TYPE=Release
           -DBUILD_docs=OFF
-          -DBUILD_python=OFF
+          -DBUILD_python=ON
           -DBUILD_python_layer=OFF
           -DUSE_LEVELDB=OFF
           -DUSE_LMDB=OFF
