@@ -32,7 +32,7 @@
 #define default_net_resolution "-1x368"
 #define default_model_pose "COCO"
 #define default_alpha_pose 0.6
-#define default_scale_gap 0.25
+#define default_scale_gap 0.3
 #define default_scale_number 1
 #define default_render_threshold 0.05
 #define default_num_gpu_start 0
@@ -145,7 +145,7 @@ public:
         }
     }
 
-    void forward(const cv::Mat& inputImage, op::Array<float>& poseKeypoints, cv::Mat& displayImage, bool display = false) {
+    void forward(const cv::Mat& inputImage, op::Array<float>& poseKeypoints,op::Array<float>& poseScores, cv::Mat& displayImage, bool display = false) {
         op::OpOutputToCvMat opOutputToCvMat;
         op::CvMatToOpInput cvMatToOpInput;
         op::CvMatToOpOutput cvMatToOpOutput;
@@ -165,6 +165,7 @@ public:
         // Step 4 - Estimate poseKeypoints
         poseExtractorCaffe->forwardPass(netInputArray, imageSize, scaleInputToNetInputs);
         poseKeypoints = poseExtractorCaffe->getPoseKeypoints();
+        poseScores = poseExtractorCaffe->getPoseScores();
 
         if (display) {
             auto outputArray = cvMatToOpOutput.createArray(inputImage, scaleInputToOutput, outputResolution);
@@ -267,6 +268,7 @@ extern "C" {
 
     typedef void* c_OP;
     op::Array<float> output;
+    op::Array<float> score_output;
 
     OP_EXPORT c_OP newOP(int logging_level,
         char* output_resolution,
@@ -290,7 +292,7 @@ extern "C" {
         OpenPose* openPose = (OpenPose*)op;
         cv::Mat image(rows, cols, CV_8UC3, img);
         cv::Mat displayImage(rows, cols, CV_8UC3, displayImg);
-        openPose->forward(image, output, displayImage, display);
+        openPose->forward(image, output,score_output, displayImage, display);
         if (output.getSize().size()) {
             size[0] = output.getSize()[0];
             size[1] = output.getSize()[1];
@@ -299,12 +301,21 @@ extern "C" {
         else {
             size[0] = 0; size[1] = 0; size[2] = 0;
         }
-        if (display) memcpy(displayImg, displayImage.ptr(), sizeof(unsigned char)*rows*cols * 3);
+
+        if (display)
+            memcpy(displayImg, displayImage.ptr(), sizeof(unsigned char)*rows*cols * 3);
     }
+
     OP_EXPORT void getOutputs(c_OP op, float* array) {
         if (output.getSize().size())
             memcpy(array, output.getPtr(), output.getSize()[0] * output.getSize()[1] * output.getSize()[2] * sizeof(float));
     }
+
+    OP_EXPORT void getOutScore(c_OP op, float* array) {
+        if (score_output.getSize().size())
+            memcpy(array, score_output.getPtr(), score_output.getSize()[0] * sizeof(float));
+    }
+
     OP_EXPORT void poseFromHeatmap(c_OP op, unsigned char* img, size_t rows, size_t cols, unsigned char* displayImg, float* hm, int* size, float* ratios) {
         OpenPose* openPose = (OpenPose*)op;
         cv::Mat image(rows, cols, CV_8UC3, img);

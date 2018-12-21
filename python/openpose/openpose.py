@@ -43,6 +43,10 @@ class OpenPose(object):
         ct.c_void_p, np.ctypeslib.ndpointer(dtype=np.float32)]
     _libop.getOutputs.restype = None
 
+    _libop.getOutScore.argtypes = [
+        ct.c_void_p, np.ctypeslib.ndpointer(dtype=np.float32)]
+    _libop.getOutScore.restype = None
+
     _libop.poseFromHeatmap.argtypes = [
         ct.c_void_p, np.ctypeslib.ndpointer(dtype=np.uint8),
         ct.c_size_t, ct.c_size_t,
@@ -100,12 +104,14 @@ class OpenPose(object):
         shape = image.shape
         displayImage = np.zeros(shape=(image.shape),dtype=np.uint8)
         size = np.zeros(shape=(3),dtype=np.int32)
-        self._libop.forward(self.op, image, shape[0], shape[1], size, displayImage, display)
+        self._libop.forward(self.op, image, shape[0], shape[1], size,displayImage, display)
         array = np.zeros(shape=(size),dtype=np.float32)
+        score_array = np.zeros(shape=(size[0]),dtype=np.float32)
         self._libop.getOutputs(self.op, array)
+        self._libop.getOutScore(self.op, score_array)
         if display:
-            return array, displayImage
-        return array
+            return array,score_array,displayImage
+        return array,score_array
 
     def poseFromHM(self, image, hm, ratios=[1]):
         """
@@ -225,7 +231,7 @@ if __name__ == "__main__":
     params["net_resolution"] = "-1x368"
     params["model_pose"] = "BODY_25"
     params["alpha_pose"] = 0.6
-    params["scale_gap"] = 0.25
+    params["scale_gap"] = 0.3
     params["scale_number"] = 1
     params["render_threshold"] = 0.05
     params["num_gpu_start"] = 0
